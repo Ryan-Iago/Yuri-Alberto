@@ -26,6 +26,53 @@ const classesHerois = {
     }
 };
 
+// --- BANCO DE DADOS DE TRAITS (TRAÇOS) ---
+const listaTraits = [
+    {
+        id: "casca_dura",
+        nome: "🛡️ Casca Dura",
+        desc: "+20 de HP Máximo imediatamente.",
+        tipo: "positivo",
+        aplicar: () => { maxHp += 20; hp += 20; }
+    },
+    {
+        id: "mente_inabalavel",
+        nome: "🧠 Mente Inabalável",
+        desc: "Reduz todo o estresse recebido em 25%.",
+        tipo: "positivo",
+        modEstresse: 0.75
+    },
+    {
+        id: "sanguinario",
+        nome: "⚔️ Sanguinário",
+        desc: "+5 de dano extra em todos os ataques.",
+        tipo: "positivo",
+        modDano: 5
+    },
+    {
+        id: "visao_noturna",
+        nome: "👁️ Visão Noturna",
+        desc: "Reduz o consumo de Luz ao explorar em 5.",
+        tipo: "positivo",
+        modLuz: -5
+    },
+    {
+        id: "medico_de_campo",
+        nome: "🧪 Meditação Profunda",
+        desc: "Ação 'Acalmar a Mente' remove 10 de estresse a mais.",
+        tipo: "positivo",
+        modCalma: 10
+    },
+    {
+        id: "claustrofobia",
+        nome: "⛓️ Claustrofobia",
+        desc: "+4 de dano bônus, mas ganha +20% de estresse.",
+        tipo: "negativo",
+        modDano: 4,
+        modEstresse: 1.20
+    }
+];
+
 // --- ESTADO DO JOGO ---
 let heroiAtual = null;
 let hp = 100;
@@ -37,10 +84,13 @@ let xp = 0;
 let xpNecessario = 50;
 let andarAtual = 1;
 
+// Lista de Traits ativos no herói
+let traitsAdquiridos = [];
+
 // --- ESTADO DO MINIMAPA (GRADE 3x3 = 9 SALAS) ---
 let salas = [];
-let posicaoJogador = 0; // Começa na sala 0 (Canto Superior Esquerdo)
-let salaEscada = 8;     // Escada no canto inferior direito
+let posicaoJogador = 0; // Começa na sala 0
+let salaEscada = 8;     // Escada na última sala
 
 // --- ESTADO DO COMBATE ---
 let emCombate = false;
@@ -58,6 +108,7 @@ function selecionarHeroi(tipoClasse) {
     
     maxHp = dados.hpMax;
     hp = maxHp;
+    traitsAdquiridos = [];
     
     // Atualiza a interface
     document.getElementById('hero-title').textContent = dados.nome;
@@ -66,6 +117,7 @@ function selecionarHeroi(tipoClasse) {
 
     gerarMapaAndar();
     atualizarStats();
+    atualizarPainelTraits();
     adicionarLog(`🛡️ Você entrou na masmorra como <b>${dados.nome}</b>. Que as sombras tenham piedade...`);
 }
 
@@ -73,14 +125,12 @@ function selecionarHeroi(tipoClasse) {
 function gerarMapaAndar() {
     salas = Array(9).fill().map(() => ({ visitada: false, comInimigo: Math.random() > 0.35 }));
     
-    // A primeira sala nunca tem inimigo
     salas[0].comInimigo = false;
     salas[0].visitada = true;
     
     posicaoJogador = 0;
-    // A escada fica na última sala (índice 8)
     salaEscada = 8;
-    salas[salaEscada].comInimigo = true; // Guardião da escada
+    salas[salaEscada].comInimigo = true;
 
     document.getElementById('next-floor-box').classList.add('hidden');
     renderizarMinimapa();
@@ -111,6 +161,14 @@ function renderizarMinimapa() {
     }
 }
 
+function calcularConsumoLuz() {
+    let consumo = heroiAtual.consumoLuz;
+    traitsAdquiridos.forEach(t => {
+        if (t.modLuz) consumo += t.modLuz;
+    });
+    return Math.max(5, consumo);
+}
+
 function avancar() {
     if (emCombate) {
         adicionarLog("Você não pode avançar enquanto estiver em combate!");
@@ -122,28 +180,25 @@ function avancar() {
         return;
     }
 
-    // Avança para a próxima sala na grade
     posicaoJogador++;
     salas[posicaoJogador].visitada = true;
 
-    // Reduz luz baseado na classe
-    luz = Math.max(0, luz - heroiAtual.consumoLuz);
+    // Reduz luz considerando traços
+    luz = Math.max(0, luz - calcularConsumoLuz());
 
-    // Luz baixa aumenta o estresse
+    // Luz baixa aumenta estresse
     if (luz < 30) {
-        const estresseGanho = Math.round(15 * heroiAtual.resistEstresse);
+        const estresseGanho = Math.round(15 * calcularMultiplicadorEstresse());
         estresse += estresseGanho;
         adicionarLog(`A escuridão sufocante aumenta seu estresse (+${estresseGanho})!`);
     }
 
-    // Checa se há combate na nova sala
     if (salas[posicaoJogador].comInimigo) {
         iniciarCombate();
     } else {
         adicionarLog("Você entra em uma sala fria e silenciosa... Parece segura.");
     }
 
-    // Se chegou na sala da escada e não há combate
     if (posicaoJogador === salaEscada && !emCombate) {
         revelarEscada();
     }
@@ -159,7 +214,7 @@ function revelarEscada() {
 
 function descenderAndar() {
     andarAtual++;
-    luz = 100; // Recupera tocha ao mudar de andar
+    luz = 100;
     document.getElementById('floor-num').textContent = andarAtual;
     adicionarLog(`🏰 <b>Você desceu para o Andar ${andarAtual}! Os monstros aqui são mais perigosos...</b>`);
     gerarMapaAndar();
@@ -170,7 +225,6 @@ function descenderAndar() {
 function iniciarCombate() {
     emCombate = true;
     
-    // Inimigos ficam mais fortes conforme o andar aumenta
     const multiplicadorStats = 1 + (andarAtual - 1) * 0.3;
 
     const listaInimigos = [
@@ -192,20 +246,33 @@ function iniciarCombate() {
     adicionarLog(`⚔️ Um <b>${enemyName}</b> surge do escuro para atacar!`);
 }
 
+function calcularDanoHeroi() {
+    let danoBase = heroiAtual.danoBase + (nivel * 3);
+    traitsAdquiridos.forEach(t => {
+        if (t.modDano) danoBase += t.modDano;
+    });
+    return Math.floor(Math.random() * 8) + danoBase;
+}
+
+function calcularMultiplicadorEstresse() {
+    let mult = heroiAtual.resistEstresse;
+    traitsAdquiridos.forEach(t => {
+        if (t.modEstresse) mult *= t.modEstresse;
+    });
+    return mult;
+}
+
 function atacar() {
     if (!emCombate) {
         adicionarLog("Não há nenhum inimigo nesta sala. Continue explorando!");
         return;
     }
 
-    // Dano baseado no nível e na classe
-    const danoBase = heroiAtual.danoBase + (nivel * 3);
-    const dano = Math.floor(Math.random() * 8) + danoBase;
+    const dano = calcularDanoHeroi();
     
     enemyHp -= dano;
     adicionarLog(`Você usou ${heroiAtual.habilidadeEspecial} no ${enemyName} causando <b>${dano}</b> de dano.`);
 
-    // Habilidade especial do Ocultista (cura um pouco ao atacar)
     if (heroiAtual.tipo === 'ocultista' && enemyHp > 0) {
         const cura = 5;
         hp = Math.min(maxHp, hp + cura);
@@ -232,12 +299,19 @@ function atacar() {
 }
 
 function defender() {
+    let alivioExtra = 0;
+    traitsAdquiridos.forEach(t => {
+        if (t.modCalma) alivioExtra += t.modCalma;
+    });
+
     if (!emCombate) {
-        estresse = Math.max(0, estresse - 15);
-        adicionarLog("Você respira fundo na calma da sala (-15 Estresse).");
+        const total = 15 + alivioExtra;
+        estresse = Math.max(0, estresse - total);
+        adicionarLog(`Você respira fundo na calma da sala (-${total} Estresse).`);
     } else {
-        estresse = Math.max(0, estresse - 20);
-        adicionarLog("Você mantém a calma mesmo sob pressão (-20 Estresse).");
+        const total = 20 + alivioExtra;
+        estresse = Math.max(0, estresse - total);
+        adicionarLog(`Você mantém a calma mesmo sob pressão (-${total} Estresse).`);
         turnoInimigo();
     }
     atualizarStats();
@@ -250,9 +324,8 @@ function usarTocha() {
 }
 
 function turnoInimigo() {
-    // Inimigos no andar mais profundo causam mais dano
     const danoInimigo = Math.floor(Math.random() * 10) + 5 + (andarAtual * 2);
-    const estresseInimigo = Math.round((Math.floor(Math.random() * 8) + 5) * heroiAtual.resistEstresse);
+    const estresseInimigo = Math.round((Math.floor(Math.random() * 8) + 5) * calcularMultiplicadorEstresse());
 
     hp -= danoInimigo;
     estresse += estresseInimigo;
@@ -260,7 +333,7 @@ function turnoInimigo() {
     adicionarLog(`💥 O ${enemyName} atacou! Você sofreu <b>${danoInimigo}</b> de dano e +<b>${estresseInimigo}</b> de estresse!`);
 }
 
-// --- 4. PROGRESSÃO DE NÍVEL E STATUS ---
+// --- 4. PROGRESSÃO, TRAITS E STATUS ---
 function ganharXP(qtd) {
     xp += qtd;
     adicionarLog(`✨ Você ganhou <b>${qtd} XP</b>.`);
@@ -270,12 +343,76 @@ function ganharXP(qtd) {
         xp -= xpNecessario;
         xpNecessario = Math.round(xpNecessario * 1.5);
 
-        // Aumenta vida máxima e recupera vida
         maxHp += 20;
         hp = maxHp;
 
         adicionarLog(`🌟 <b>LEVEL UP! Você alcançou o Nível ${nivel}!</b> Sua vida foi restaurada e seus atributos aumentaram!`);
+
+        // Checa se é um nível par para liberar Traço
+        if (nivel % 2 === 0) {
+            abrirModalTraits();
+        }
     }
+}
+
+function abrirModalTraits() {
+    const modal = document.getElementById('trait-modal');
+    const container = document.getElementById('trait-options');
+    container.innerHTML = '';
+
+    // Filtra traços que o herói ainda não possui
+    const disponiveis = listaTraits.filter(t => !traitsAdquiridos.some(adq => adq.id === t.id));
+
+    if (disponiveis.length === 0) return;
+
+    // Sorteia até 3 opções aleatórias
+    const embaralhados = [...disponiveis].sort(() => 0.5 - Math.random());
+    const opcoes = embaralhados.slice(0, 3);
+
+    opcoes.forEach(trait => {
+        const card = document.createElement('div');
+        card.className = 'trait-card';
+        card.innerHTML = `
+            <h4>${trait.nome}</h4>
+            <p>${trait.desc}</p>
+        `;
+        card.onclick = () => escolherTrait(trait);
+        container.appendChild(card);
+    });
+
+    modal.classList.remove('hidden');
+}
+
+function escolherTrait(trait) {
+    traitsAdquiridos.push(trait);
+
+    if (trait.aplicar) {
+        trait.aplicar();
+    }
+
+    adicionarLog(`🧬 Você adquiriu o traço: <b>${trait.nome}</b>!`);
+    document.getElementById('trait-modal').classList.add('hidden');
+    
+    atualizarPainelTraits();
+    atualizarStats();
+}
+
+function atualizarPainelTraits() {
+    const container = document.getElementById('traits-list');
+    container.innerHTML = '';
+
+    if (traitsAdquiridos.length === 0) {
+        container.innerHTML = '<span class="no-traits">Nenhum traço ativo</span>';
+        return;
+    }
+
+    traitsAdquiridos.forEach(t => {
+        const badge = document.createElement('span');
+        badge.className = `trait-badge ${t.tipo === 'negativo' ? 'negative' : ''}`;
+        badge.textContent = t.nome;
+        badge.title = t.desc;
+        container.appendChild(badge);
+    });
 }
 
 function atualizarStats() {
@@ -291,7 +428,6 @@ function atualizarStats() {
         document.getElementById('enemy-hp').textContent = enemyHp;
     }
 
-    // Condições de Derrota
     if (estresse >= 100) {
         adicionarLog("⚠️ <b>Seu herói enlouqueceu completamente pelo estresse da escuridão! Fim de jogo.</b>");
         encerrarJogo();
