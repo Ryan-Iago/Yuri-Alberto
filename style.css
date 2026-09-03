@@ -10,11 +10,11 @@ body {
 }
 
 .game-container {
-    width: 600px;
+    width: 680px;
     background: #111113;
     border: 2px solid #3d3121;
     padding: 20px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.9);
+    box-shadow: 0 0 25px rgba(0,0,0,0.95);
     border-radius: 4px;
 }
 
@@ -25,6 +25,67 @@ h1 {
     letter-spacing: 2px;
 }
 
+h2 {
+    text-align: center;
+    color: #c5a059;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+/* --- TELA DE SELEÇÃO DE HERÓI --- */
+.class-options {
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+}
+
+.class-card {
+    background: #18181c;
+    border: 1px solid #3d3121;
+    padding: 15px;
+    width: 30%;
+    text-align: center;
+    border-radius: 4px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.class-card:hover {
+    transform: translateY(-4px);
+    border-color: #8a1212;
+}
+
+.class-card h3 {
+    margin-top: 0;
+    color: #38bdf8;
+    font-size: 1.1rem;
+}
+
+.class-card p {
+    font-size: 0.85rem;
+    color: #aaa;
+    min-height: 50px;
+}
+
+/* --- UTILITÁRIOS --- */
+.hidden {
+    display: none !important;
+}
+
+/* --- BARRA SUPERIOR (ANDAR E NÍVEL) --- */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    background: #000;
+    border: 1px solid #3d3121;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.floor-info { color: #e2e8f0; }
+.level-info { color: #f59e0b; }
+
+/* --- PAINEL DE STATUS --- */
 .stats-panel {
     display: flex;
     justify-content: space-between;
@@ -34,39 +95,88 @@ h1 {
     margin-bottom: 15px;
 }
 
-.label {
+.label { color: #888; }
+
+/* --- ÁREA PRINCIPAL (MINIMAPA + COMBATE) --- */
+.main-display {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+/* MINIMAPA */
+.minimap-container {
+    width: 130px;
+    background: #0d0d0f;
+    border: 1px solid #3d3121;
+    padding: 8px;
+    text-align: center;
+}
+
+.minimap-container h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.8rem;
     color: #888;
 }
 
+.minimap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+
+.map-cell {
+    width: 32px;
+    height: 32px;
+    background: #1f1f24;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border-radius: 2px;
+}
+
+.map-cell.current { border-color: #38bdf8; background: #0284c7; color: #fff; }
+.map-cell.visited { background: #2a2a30; }
+.map-cell.stairs { border-color: #f59e0b; background: #78350f; }
+
+/* TELA DE COMBATE */
 .battle-screen {
+    flex: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    background: #000;
+    padding: 10px;
+    border: 1px solid #3d3121;
 }
 
 .character-card {
     background: #18181c;
     border: 1px solid #444;
-    padding: 15px;
-    width: 40%;
+    padding: 10px;
+    width: 42%;
     text-align: center;
 }
 
 .hero { border-color: #2b5329; }
 .enemy { border-color: #8a1212; }
+.vs { color: #8a1212; font-weight: bold; }
 
+/* --- LOG DE EVENTOS --- */
 .log-box {
-    height: 100px;
+    height: 110px;
     background: #000;
     border: 1px solid #3d3121;
     padding: 10px;
     overflow-y: auto;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     margin-bottom: 15px;
     color: #aaa;
 }
 
+/* --- PAINEL DE AÇÕES E BOTÕES --- */
 .actions-panel {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -96,4 +206,17 @@ h1 {
 
 .btn-avancar:hover {
     background: #8a1212;
+}
+
+.btn-stair {
+    width: 100%;
+    margin-top: 10px;
+    background: #78350f;
+    color: #fef08a;
+    border-color: #f59e0b;
+    font-weight: bold;
+}
+
+.btn-stair:hover {
+    background: #b45309;
 }
