@@ -9,39 +9,88 @@
 <body>
     <div class="game-container">
         <h1>🗡️ Ecos da Penumbra</h1>
-        
-        <!-- Status do Herói -->
-        <div class="stats-panel">
-            <div class="stat"><span class="label">Vida:</span> <span id="hp">100</span>/100</div>
-            <div class="stat"><span class="label">Estresse:</span> <span id="estresse">0</span>/100</div>
-            <div class="stat"><span class="label">Luz:</span> <span id="luz">100</span>%</div>
-        </div>
 
-        <!-- Tela de Combate -->
-        <div class="battle-screen">
-            <div class="character-card hero">
-                <h3>Guerreiro</h3>
-                <p id="hero-status">Pronto para lutar</p>
+        <!-- 1. TELA DE SELEÇÃO DE PERSONAGEM (Aparece no início) -->
+        <div id="selection-screen" class="screen">
+            <h2>Escolha seu Herói</h2>
+            <div class="class-options">
+                <div class="class-card" onclick="selecionarHeroi('guerreiro')">
+                    <h3>🛡️ Guerreiro</h3>
+                    <p>Vida alta, resistência ao estresse e dano físico sólido.</p>
+                    <button class="btn">Jogar de Guerreiro</button>
+                </div>
+                <div class="class-card" onclick="selecionarHeroi('ladrao')">
+                    <h3>🗡️ Ladrão</h3>
+                    <p>Críticos altos, esquiva e consome menos luz ao explorar.</p>
+                    <button class="btn">Jogar de Ladrão</button>
+                </div>
+                <div class="class-card" onclick="selecionarHeroi('ocultista')">
+                    <h3>🔮 Ocultista</h3>
+                    <p>Cura forte e dano mágico, mas ganha mais estresse.</p>
+                    <button class="btn">Jogar de Ocultista</button>
+                </div>
             </div>
-            <div class="vs">VS</div>
-            <div class="character-card enemy">
-                <h3 id="enemy-name">Cultista</h3>
-                <p>HP: <span id="enemy-hp">40</span>/40</p>
+        </div>
+
+        <!-- 2. TELA PRINCIPAL DO JOGO (Escondida até escolher o personagem) -->
+        <div id="game-screen" class="screen hidden">
+            
+            <!-- Painel Superior: Andar, Nível e XP -->
+            <div class="top-bar">
+                <div class="floor-info">🏰 Andar: <span id="floor-num">1</span></div>
+                <div class="level-info">Nível: <span id="hero-level">1</span> (XP: <span id="hero-xp">0</span>/<span id="xp-next">50</span>)</div>
+            </div>
+
+            <!-- Status do Herói -->
+            <div class="stats-panel">
+                <div class="stat"><span class="label">Vida:</span> <span id="hp">100</span>/<span id="max-hp">100</span></div>
+                <div class="stat"><span class="label">Estresse:</span> <span id="estresse">0</span>/100</div>
+                <div class="stat"><span class="label">Luz:</span> <span id="luz">100</span>%</div>
+            </div>
+
+            <!-- Área do Minimapa + Tela de Combate -->
+            <div class="main-display">
+                <!-- Minimapa (3x3 Salas) -->
+                <div class="minimap-container">
+                    <h4>Minimapa</h4>
+                    <div id="minimap" class="minimap-grid">
+                        <!-- O JavaScript vai injetar as 9 salas aqui -->
+                    </div>
+                </div>
+
+                <!-- Tela de Combate / Visualização -->
+                <div class="battle-screen">
+                    <div class="character-card hero">
+                        <h3 id="hero-title">Guerreiro</h3>
+                        <p id="hero-status">Explorando...</p>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="character-card enemy">
+                        <h3 id="enemy-name">Nenhum</h3>
+                        <p>HP: <span id="enemy-hp">0</span>/<span id="enemy-max-hp">0</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log de Eventos -->
+            <div id="log" class="log-box">
+                <p>Você adentra os corredores frios da masmorra...</p>
+            </div>
+
+            <!-- Painel de Ações -->
+            <div id="actions" class="actions-panel">
+                <button class="btn" onclick="atacar()">Atacar</button>
+                <button class="btn" onclick="defender()">Acalmar a Mente</button>
+                <button class="btn" onclick="usarTocha()">Usar Tocha</button>
+                <button class="btn btn-avancar" onclick="avancar()">Explorar Próxima Sala</button>
+            </div>
+
+            <!-- Botão de Descida de Andar (Escondido até achar a escada) -->
+            <div id="next-floor-box" class="hidden">
+                <button class="btn btn-stair" onclick="descenderAndar()">🪜 Descer para o Próximo Andar</button>
             </div>
         </div>
 
-        <!-- Log de Eventos -->
-        <div id="log" class="log-box">
-            <p>Você entra na masmorra escura...</p>
-        </div>
-
-        <!-- Ações do Jogador -->
-        <div id="actions" class="actions-panel">
-            <button class="btn" onclick="atacar()">Atacar</button>
-            <button class="btn" onclick="defender()">Acalmar a Mente</button>
-            <button class="btn" onclick="usarTocha()">Usar Tocha</button>
-            <button class="btn btn-avancar" onclick="avancar()">Avançar na Masmorra</button>
-        </div>
     </div>
 
     <script src="script.js" defer></script>
