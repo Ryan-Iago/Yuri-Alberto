@@ -16,6 +16,7 @@ body {
     padding: 20px;
     box-shadow: 0 0 25px rgba(0,0,0,0.95);
     border-radius: 4px;
+    position: relative;
 }
 
 h1 {
@@ -92,10 +93,50 @@ h2 {
     background: #1a1917;
     padding: 10px;
     border: 1px solid #3d3121;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .label { color: #888; }
+
+/* --- NOVO: PAINEL DE TRAÇOS (TRAITS) --- */
+.traits-panel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0d0d0f;
+    border: 1px solid #3d3121;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    font-size: 0.85rem;
+}
+
+.traits-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.no-traits {
+    color: #555;
+    font-style: italic;
+}
+
+.trait-badge {
+    background: #1c1917;
+    border: 1px solid #d97706;
+    color: #fef08a;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 0 4px rgba(217, 119, 6, 0.2);
+}
+
+.trait-badge.negative {
+    border-color: #dc2626;
+    color: #fca5a5;
+    box-shadow: 0 0 4px rgba(220, 38, 38, 0.2);
+}
 
 /* --- ÁREA PRINCIPAL (MINIMAPA + COMBATE) --- */
 .main-display {
@@ -219,4 +260,73 @@ h2 {
 
 .btn-stair:hover {
     background: #b45309;
+}
+
+/* --- NOVO: MODAL DE ESCOLHA DE TRAÇO --- */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    border-radius: 4px;
+}
+
+.modal-content {
+    background: #111113;
+    border: 2px solid #d97706;
+    padding: 20px;
+    width: 85%;
+    text-align: center;
+    box-shadow: 0 0 20px rgba(217, 119, 6, 0.3);
+}
+
+.modal-content h2 {
+    color: #f59e0b;
+    margin-top: 0;
+}
+
+.modal-content p {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+.trait-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.trait-card {
+    background: #18181c;
+    border: 1px solid #3d3121;
+    padding: 12px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.trait-card:hover {
+    background: #26221c;
+    border-color: #f59e0b;
+    transform: scale(1.01);
+}
+
+.trait-card h4 {
+    margin: 0 0 5px 0;
+    color: #fef08a;
+    font-size: 0.95rem;
+}
+
+.trait-card p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #aaa;
 }
