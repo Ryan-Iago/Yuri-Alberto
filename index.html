@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecos da Penumbra</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>🗡️ Ecos da Penumbra</h1>
+        
+        <!-- Status do Herói -->
+        <div class="stats-panel">
+            <div class="stat"><span class="label">Vida:</span> <span id="hp">100</span>/100</div>
+            <div class="stat"><span class="label">Estresse:</span> <span id="estresse">0</span>/100</div>
+            <div class="stat"><span class="label">Luz:</span> <span id="luz">100</span>%</div>
+        </div>
+
+        <!-- Tela de Combate -->
+        <div class="battle-screen">
+            <div class="character-card hero">
+                <h3>Guerreiro</h3>
+                <p id="hero-status">Pronto para lutar</p>
+            </div>
+            <div class="vs">VS</div>
+            <div class="character-card enemy">
+                <h3 id="enemy-name">Cultista</h3>
+                <p>HP: <span id="enemy-hp">40</span>/40</p>
+            </div>
+        </div>
+
+        <!-- Log de Eventos -->
+        <div id="log" class="log-box">
+            <p>Você entra na masmorra escura...</p>
+        </div>
+
+        <!-- Ações do Jogador -->
+        <div id="actions" class="actions-panel">
+            <button class="btn" onclick="atacar()">Atacar</button>
+            <button class="btn" onclick="defender()">Acalmar a Mente</button>
+            <button class="btn" onclick="usarTocha()">Usar Tocha</button>
+            <button class="btn btn-avancar" onclick="avancar()">Avançar na Masmorra</button>
+        </div>
+    </div>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
