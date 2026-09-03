@@ -1,0 +1,99 @@
+body {
+    background-color: #080808;
+    color: #c5a059;
+    font-family: 'Georgia', serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    width: 600px;
+    background: #111113;
+    border: 2px solid #3d3121;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.9);
+    border-radius: 4px;
+}
+
+h1 {
+    text-align: center;
+    color: #8a1212;
+    margin-top: 0;
+    letter-spacing: 2px;
+}
+
+.stats-panel {
+    display: flex;
+    justify-content: space-between;
+    background: #1a1917;
+    padding: 10px;
+    border: 1px solid #3d3121;
+    margin-bottom: 15px;
+}
+
+.label {
+    color: #888;
+}
+
+.battle-screen {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.character-card {
+    background: #18181c;
+    border: 1px solid #444;
+    padding: 15px;
+    width: 40%;
+    text-align: center;
+}
+
+.hero { border-color: #2b5329; }
+.enemy { border-color: #8a1212; }
+
+.log-box {
+    height: 100px;
+    background: #000;
+    border: 1px solid #3d3121;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    color: #aaa;
+}
+
+.actions-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.btn {
+    background: #2a2218;
+    color: #c5a059;
+    border: 1px solid #5c4728;
+    padding: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background: #423524;
+}
+
+.btn-avancar {
+    grid-column: span 2;
+    background: #5c1818;
+    color: #fff;
+    border-color: #8a1212;
+}
+
+.btn-avancar:hover {
+    background: #8a1212;
+}
