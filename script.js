@@ -1,137 +1,115 @@
-// Estado do Jogador
+// --- DADOS DAS CLASSES DE HERÓI ---
+const CLASSES = {
+    guerreiro: {
+        nome: "Guerreiro",
+        hpMax: 120,
+        danoMin: 12,
+        danoMax: 20,
+        res_estresse: 0.8, // Toma 20% a menos de estresse
+        consumo_luz: 15,
+        habilidade: "Golpe Pesado"
+    },
+    ladrao: {
+        nome: "Ladrão",
+        hpMax: 85,
+        danoMin: 15,
+        danoMax: 28,
+        res_estresse: 1.0,
+        consumo_luz: 10, // Consome menos luz
+        habilidade: "Ataque Furtivo"
+    },
+    ocultista: {
+        nome: "Ocultista",
+        hpMax: 90,
+        danoMin: 10,
+        danoMax: 18,
+        res_estresse: 1.2, // Toma 20% a mais de estresse
+        consumo_luz: 15,
+        habilidade: "Cura Sombria"
+    }
+};
+
+// --- ESTADO DO JOGO ---
+let heroi = null;
 let hp = 100;
+let maxHp = 100;
 let estresse = 0;
 let luz = 100;
 
-// Estado do Inimigo
+let nivel = 1;
+let xp = 0;
+let xpParaProximoNivel = 50;
+let andar = 1;
+
+// --- ESTADO DO COMBATE ---
 let emCombate = false;
 let enemyHp = 0;
 let enemyMaxHp = 0;
 let enemyName = "";
+let enemyDanoBase = 10;
+
+// --- ESTADO DO MINIMAPA (3x3 = 9 salas) ---
+let salaAtual = 0; // Índice de 0 a 8
+let salaEscada = 8; // A última sala sempre tem a escada
+let salasVisitadas = [0];
 
 const logEl = document.getElementById('log');
 
+// --- 1. INICIALIZAÇÃO E SELEÇÃO DE HERÓI ---
+function selecionarHeroi(classeChave) {
+    const dadosClasse = CLASSES[classeChave];
+    heroi = { ...dadosClasse, chave: classeChave };
+    
+    hp = heroi.hpMax;
+    maxHp = heroi.hpMax;
+    
+    document.getElementById('hero-title').textContent = heroi.nome;
+    document.getElementById('selection-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    
+    adicionarLog(`Você adentrou a penumbra como um <b>${heroi.nome}</b>. Boa sorte...`);
+    gerarMapa();
+    atualizarStats();
+}
+
+// --- 2. SISTEMA DE MINIMAPA ---
+function gerarMapa() {
+    const minimapEl = document.getElementById('minimap');
+    minimapEl.innerHTML = '';
+    
+    // Sortear a escada para uma sala distante (de 4 a 8)
+    salaEscada = Math.floor(Math.random() * 5) + 4; 
+    salasVisitadas = [0];
+    salaAtual = 0;
+    
+    renderizarMapa();
+}
+
+function renderizarMapa() {
+    const minimapEl = document.getElementById('minimap');
+    minimapEl.innerHTML = '';
+    
+    for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'map-cell';
+        
+        if (i === salaAtual) {
+            cell.classList.add('current');
+            cell.textContent = '👾';
+        } else if (i === salaEscada && salasVisitadas.includes(i)) {
+            cell.classList.add('stairs');
+            cell.textContent = '🪜';
+        } else if (salasVisitadas.includes(i)) {
+            cell.classList.add('visited');
+            cell.textContent = '✓';
+        } else {
+            cell.textContent = '?';
+        }
+        
+        minimapEl.appendChild(cell);
+    }
+}
+
+// --- 3. ATUALIZAÇÃO DA INTERFACE ---
 function adicionarLog(texto) {
-    logEl.innerHTML += `<p>${texto}</p>`;
-    logEl.scrollTop = logEl.scrollHeight;
-}
-
-function atualizarStats() {
-    document.getElementById('hp').textContent = hp;
-    document.getElementById('estresse').textContent = estresse;
-    document.getElementById('luz').textContent = luz;
-    
-    if (enemyMaxHp > 0) {
-        document.getElementById('enemy-hp').textContent = enemyHp;
-    }
-
-    if (estresse >= 100) {
-        adicionarLog("⚠️ <b>Seu herói sucumbiu à loucura pelo estresse! Fim de jogo.</b>");
-        encerrarJogo();
-    }
-    if (hp <= 0) {
-        adicionarLog("💀 <b>Seu herói foi derrotado nas sombras... Fim de jogo.</b>");
-        encerrarJogo();
-    }
-}
-
-function avancar() {
-    if (emCombate) {
-        adicionarLog("Você não pode avançar enquanto estiver em combate!");
-        return;
-    }
-
-    // Reduz a luz a cada passo
-    luz = Math.max(0, luz - 15);
-    
-    // Quanto menor a luz, mais estresse o jogador ganha
-    if (luz < 30) {
-        estresse += 15;
-        adicionarLog("A escuridão sufocante aumenta seu estresse!");
-    }
-
-    // Chance de encontrar inimigo
-    const sorteio = Math.random();
-    if (sorteio > 0.3) {
-        iniciarCombate();
-    } else {
-        adicionarLog("Você caminha pelos corredores frios... Nada além de silêncio.");
-    }
-    
-    atualizarStats();
-}
-
-function iniciarCombate() {
-    emCombate = true;
-    const inimigos = [
-        { nome: "Cultista Sombrio", hp: 35 },
-        { nome: "Aberração Tenebrosa", hp: 50 },
-        { nome: "Esqueleto Antigo", hp: 30 }
-    ];
-    
-    const escolhido = inimigos[Math.floor(Math.random() * inimigos.length)];
-    enemyName = escolhido.nome;
-    enemyHp = escolhido.hp;
-    enemyMaxHp = escolhido.hp;
-
-    document.getElementById('enemy-name').textContent = enemyName;
-    document.getElementById('enemy-hp').textContent = enemyHp;
-    adicionarLog(`⚔️ Um <b>${enemyName}</b> surge da escuridão!`);
-}
-
-function atacar() {
-    if (!emCombate) {
-        adicionarLog("Não há nada para atacar. Avance na masmorra!");
-        return;
-    }
-
-    // Ataque do jogador
-    const dano = Math.floor(Math.random() * 15) + 10;
-    enemyHp -= dano;
-    adicionarLog(`Você golpeou o ${enemyName} causando ${dano} de dano.`);
-
-    if (enemyHp <= 0) {
-        enemyHp = 0;
-        adicionarLog(`🎉 Você derrotou o ${enemyName}!`);
-        emCombate = false;
-        document.getElementById('enemy-name').textContent = "Nenhum";
-    } else {
-        turnoInimigo();
-    }
-
-    atualizarStats();
-}
-
-function defender() {
-    if (!emCombate) {
-        // Reduz estresse fora de combate
-        estresse = Math.max(0, estresse - 10);
-        adicionarLog("Você respira fundo e ganha um pouco de clareza mental (-10 Estresse).");
-    } else {
-        estresse = Math.max(0, estresse - 15);
-        adicionarLog("Você se foca e ignora o medo (-15 Estresse).");
-        turnoInimigo();
-    }
-    atualizarStats();
-}
-
-function usarTocha() {
-    luz = Math.min(100, luz + 40);
-    adicionarLog("Você acende uma tocha. A luz afasta as sombras (+40% Luz).");
-    atualizarStats();
-}
-
-function turnoInimigo() {
-    // Ataque do inimigo causa dano e estresse
-    const danoInimigo = Math.floor(Math.random() * 12) + 5;
-    const estresseInimigo = Math.floor(Math.random() * 10) + 5;
-
-    hp -= danoInimigo;
-    estresse += estresseInimigo;
-
-    adicionarLog(` O ${enemyName} ataca! Caverna ${danoInimigo} de dano e +${estresseInimigo} de estresse!`);
-}
-
-function encerrarJogo() {
-    document.getElementById('actions').innerHTML = `<button class="btn btn-avancar" onclick="location.reload()">Recomeçar</button>`;
-}
+    logEl.innerHTML += `<p>${texto}</
