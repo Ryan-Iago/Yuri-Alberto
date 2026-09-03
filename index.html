@@ -10,7 +10,7 @@
     <div class="game-container">
         <h1>🗡️ Ecos da Penumbra</h1>
 
-        <!-- 1. TELA DE SELEÇÃO DE PERSONAGEM (Aparece no início) -->
+        <!-- 1. TELA DE SELEÇÃO DE PERSONAGEM -->
         <div id="selection-screen" class="screen">
             <h2>Escolha seu Herói</h2>
             <div class="class-options">
@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        <!-- 2. TELA PRINCIPAL DO JOGO (Escondida até escolher o personagem) -->
+        <!-- 2. TELA PRINCIPAL DO JOGO -->
         <div id="game-screen" class="screen hidden">
             
             <!-- Painel Superior: Andar, Nível e XP -->
@@ -48,13 +48,21 @@
                 <div class="stat"><span class="label">Luz:</span> <span id="luz">100</span>%</div>
             </div>
 
+            <!-- NOVO: Painel de Traços (Traits) Adquiridos -->
+            <div class="traits-panel">
+                <span class="label">Traços:</span>
+                <div id="traits-list" class="traits-container">
+                    <span class="no-traits">Nenhum traço ativo</span>
+                </div>
+            </div>
+
             <!-- Área do Minimapa + Tela de Combate -->
             <div class="main-display">
                 <!-- Minimapa (3x3 Salas) -->
                 <div class="minimap-container">
                     <h4>Minimapa</h4>
                     <div id="minimap" class="minimap-grid">
-                        <!-- O JavaScript vai injetar as 9 salas aqui -->
+                        <!-- Injetado via JS -->
                     </div>
                 </div>
 
@@ -85,9 +93,20 @@
                 <button class="btn btn-avancar" onclick="avancar()">Explorar Próxima Sala</button>
             </div>
 
-            <!-- Botão de Descida de Andar (Escondido até achar a escada) -->
+            <!-- Botão de Descida de Andar -->
             <div id="next-floor-box" class="hidden">
                 <button class="btn btn-stair" onclick="descenderAndar()">🪜 Descer para o Próximo Andar</button>
+            </div>
+        </div>
+
+        <!-- NOVO: Modal de Escolha de Traço (Surgirá a cada 2 níveis) -->
+        <div id="trait-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2>🔮 Novo Traço Desbloqueado!</h2>
+                <p>Escolha uma característica para moldar a mente do seu herói:</p>
+                <div id="trait-options" class="trait-options-container">
+                    <!-- Os cards de escolha de Traço serão injetados via JS -->
+                </div>
             </div>
         </div>
 
