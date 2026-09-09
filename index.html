@@ -35,9 +35,10 @@
         <!-- 2. TELA PRINCIPAL DO JOGO -->
         <div id="game-screen" class="screen hidden">
             
-            <!-- Painel Superior: Andar, Nível e XP -->
+            <!-- Painel Superior: Andar, Nível, XP e Ouro -->
             <div class="top-bar">
                 <div class="floor-info">🏰 Andar: <span id="floor-num">1</span></div>
+                <div class="gold-info">💰 Ouro: <span id="gold">50</span></div>
                 <div class="level-info">Nível: <span id="hero-level">1</span> (XP: <span id="hero-xp">0</span>/<span id="xp-next">50</span>)</div>
             </div>
 
@@ -48,7 +49,7 @@
                 <div class="stat"><span class="label">Luz:</span> <span id="luz">100</span>%</div>
             </div>
 
-            <!-- NOVO: Painel de Traços (Traits) Adquiridos -->
+            <!-- Painel de Traços (Traits) Adquiridos -->
             <div class="traits-panel">
                 <span class="label">Traços:</span>
                 <div id="traits-list" class="traits-container">
@@ -56,7 +57,7 @@
                 </div>
             </div>
 
-            <!-- Área do Minimapa + Tela de Combate -->
+            <!-- Área do Minimapa + Cenário Visual do Corredor -->
             <div class="main-display">
                 <!-- Minimapa (3x3 Salas) -->
                 <div class="minimap-container">
@@ -66,17 +67,37 @@
                     </div>
                 </div>
 
-                <!-- Tela de Combate / Visualização -->
-                <div class="battle-screen">
-                    <div class="character-card hero">
-                        <h3 id="hero-title">Guerreiro</h3>
-                        <p id="hero-status">Explorando...</p>
+                <!-- Cenário do Corredor & Silhuetas -->
+                <div class="corridor-view">
+                    <div class="dungeon-wall left-wall"></div>
+                    <div class="dungeon-wall right-wall"></div>
+                    <div class="corridor-depth"></div>
+                    
+                    <!-- Silhueta do Herói -->
+                    <div id="hero-silhouette" class="silhouette hero-silhouette">
+                        <div class="silhouette-sprite hero-sprite-guerreiro"></div>
                     </div>
-                    <div class="vs">VS</div>
-                    <div class="character-card enemy">
-                        <h3 id="enemy-name">Nenhum</h3>
-                        <p>HP: <span id="enemy-hp">0</span>/<span id="enemy-max-hp">0</span></p>
+
+                    <!-- Silhueta do Inimigo / NPC -->
+                    <div id="enemy-silhouette" class="silhouette enemy-silhouette hidden">
+                        <div id="enemy-sprite" class="silhouette-sprite"></div>
                     </div>
+
+                    <!-- HUD Overlay dentro do Cenário -->
+                    <div class="corridor-hud">
+                        <div id="hud-hero-name" class="hud-tag">Guerreiro</div>
+                        <div id="hud-enemy-info" class="hud-tag enemy-tag hidden">
+                            <span id="enemy-name">Inimigo</span> (<span id="enemy-hp">0</span>/<span id="enemy-max-hp">0</span> HP)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Painel de Inventário Rápido -->
+            <div class="inventory-panel">
+                <span class="label">Inventário:</span>
+                <div id="inventory-list" class="inventory-container">
+                    <!-- Itens injetados via JS -->
                 </div>
             </div>
 
@@ -99,14 +120,52 @@
             </div>
         </div>
 
-        <!-- NOVO: Modal de Escolha de Traço (Surgirá a cada 2 níveis) -->
+        <!-- Modal de Escolha de Traço -->
         <div id="trait-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <h2>🔮 Novo Traço Desbloqueado!</h2>
                 <p>Escolha uma característica para moldar a mente do seu herói:</p>
                 <div id="trait-options" class="trait-options-container">
-                    <!-- Os cards de escolha de Traço serão injetados via JS -->
+                    <!-- Injetado via JS -->
                 </div>
+            </div>
+        </div>
+
+        <!-- NOVO: Modal de Taverna / Mercado / Mercado da Masmorra -->
+        <div id="shop-modal" class="modal-overlay hidden">
+            <div class="modal-content shop-content">
+                <h2>🍺 Taverna & Mercado das Sombras</h2>
+                <p>Um porto seguro na escuridão. Escolha seus mantimentos ou descanse.</p>
+                
+                <div class="shop-tabs">
+                    <button class="btn shop-tab active" onclick="alternarAbaLoja('comprar')">Comprar</button>
+                    <button class="btn shop-tab" onclick="alternarAbaLoja('descansar')">Descansar</button>
+                </div>
+
+                <!-- Aba de Compras -->
+                <div id="shop-buy-section" class="shop-section">
+                    <div id="shop-items-list" class="shop-items-grid">
+                        <!-- Itens do mercado injetados via JS -->
+                    </div>
+                </div>
+
+                <!-- Aba de Descanso -->
+                <div id="shop-rest-section" class="shop-section hidden">
+                    <div class="rest-options">
+                        <div class="rest-card">
+                            <h4>🍺 Bebida Quente (30 Ouro)</h4>
+                            <p>Recupera 30 de Estresse.</p>
+                            <button class="btn" onclick="comprarDescanso('bebida')">Comprar</button>
+                        </div>
+                        <div class="rest-card">
+                            <h4>🛏️ Pernoite Seguro (50 Ouro)</h4>
+                            <p>Restaura 100% de HP e reduz 50 de Estresse.</p>
+                            <button class="btn" onclick="comprarDescanso('pernoite')">Comprar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-stair" style="margin-top: 15px;" onclick="fecharLoja()">Sair da Taverna</button>
             </div>
         </div>
 
