@@ -6,7 +6,8 @@ const classesHerois = {
         danoBase: 12,
         resistEstresse: 0.8, // Toma 20% a menos de estresse
         consumoLuz: 15,
-        habilidadeEspecial: "Soco de Escudo"
+        habilidadeEspecial: "Soco de Escudo",
+        sprite: "⚔️"
     },
     ladrao: {
         nome: "Ladrão",
@@ -14,7 +15,8 @@ const classesHerois = {
         danoBase: 16,
         resistEstresse: 1.0,
         consumoLuz: 10, // Consome menos luz
-        habilidadeEspecial: "Golpe Baixo"
+        habilidadeEspecial: "Golpe Baixo",
+        sprite: "🗡️"
     },
     ocultista: {
         nome: "Ocultista",
@@ -22,7 +24,8 @@ const classesHerois = {
         danoBase: 14,
         resistEstresse: 1.2, // Toma 20% a mais de estresse
         consumoLuz: 15,
-        habilidadeEspecial: "Drenar Alma"
+        habilidadeEspecial: "Drenar Alma",
+        sprite: "🔮"
     }
 };
 
@@ -79,10 +82,17 @@ let hp = 100;
 let maxHp = 100;
 let estresse = 0;
 let luz = 100;
+let ouro = 50;
 let nivel = 1;
 let xp = 0;
 let xpNecessario = 50;
 let andarAtual = 1;
+
+// Inventário do Herói
+let inventario = {
+    pocaodeCura: 2,
+    tocha: 3
+};
 
 // Lista de Traits ativos no herói
 let traitsAdquiridos = [];
@@ -91,13 +101,16 @@ let traitsAdquiridos = [];
 let salas = [];
 let posicaoJogador = 0; // Começa na sala 0
 let salaEscada = 8;     // Escada na última sala
+let salaLoja = -1;      // Sala da taverna/mercado
 
 // --- ESTADO DO COMBATE ---
 let emCombate = false;
 let enemyHp = 0;
 let enemyMaxHp = 0;
 let enemyName = "";
+let enemySprite = "";
 let enemyXpRecompensa = 0;
+let enemyOuroRecompensa = 0;
 
 const logEl = document.getElementById('log');
 
@@ -109,22 +122,36 @@ function selecionarHeroi(tipoClasse) {
     maxHp = dados.hpMax;
     hp = maxHp;
     traitsAdquiridos = [];
+    ouro = 50;
+    inventario = { pocaodeCura: 2, tocha: 3 };
     
     // Atualiza a interface
-    document.getElementById('hero-title').textContent = dados.nome;
+    const heroTitleEl = document.getElementById('hero-title');
+    if (heroTitleEl) heroTitleEl.textContent = dados.nome;
+    
     document.getElementById('selection-screen').classList.add('hidden');
     document.getElementById('game-screen').classList.remove('hidden');
 
+    // Configura o Sprite da Silhueta do Herói
+    const heroSpriteEl = document.getElementById('hero-sprite');
+    if (heroSpriteEl) heroSpriteEl.textContent = dados.sprite;
+
     gerarMapaAndar();
     atualizarStats();
+    atualizarInventarioUI();
     atualizarPainelTraits();
     adicionarLog(`🛡️ Você entrou na masmorra como <b>${dados.nome}</b>. Que as sombras tenham piedade...`);
 }
 
 // --- 2. SISTEMA DE MINIMAPA E EXPLORAÇÃO ---
 function gerarMapaAndar() {
-    salas = Array(9).fill().map(() => ({ visitada: false, comInimigo: Math.random() > 0.35 }));
+    salas = Array(9).fill().map(() => ({ 
+        visitada: false, 
+        comInimigo: Math.random() > 0.35,
+        ehLoja: false
+    }));
     
+    // Sala Inicial
     salas[0].comInimigo = false;
     salas[0].visitada = true;
     
@@ -132,12 +159,21 @@ function gerarMapaAndar() {
     salaEscada = 8;
     salas[salaEscada].comInimigo = true;
 
-    document.getElementById('next-floor-box').classList.add('hidden');
+    // Adiciona uma Taverna/Mercado aleatória entre as salas 2 e 6
+    salaLoja = Math.floor(Math.random() * 5) + 2;
+    salas[salaLoja].comInimigo = false;
+    salas[salaLoja].ehLoja = true;
+
+    const nextFloorBox = document.getElementById('next-floor-box');
+    if (nextFloorBox) nextFloorBox.classList.add('hidden');
+    
+    esconderInimigoCorredor();
     renderizarMinimapa();
 }
 
 function renderizarMinimapa() {
     const gridEl = document.getElementById('minimap');
+    if (!gridEl) return;
     gridEl.innerHTML = '';
 
     for (let i = 0; i < 9; i++) {
@@ -150,6 +186,9 @@ function renderizarMinimapa() {
         } else if (i === salaEscada && salas[i].visitada) {
             celula.classList.add('stairs');
             celula.textContent = '🪜';
+        } else if (salas[i].ehLoja && salas[i].visitada) {
+            celula.classList.add('shop');
+            celula.textContent = '⛺';
         } else if (salas[i].visitada) {
             celula.classList.add('visited');
             celula.textContent = '•';
@@ -195,7 +234,11 @@ function avancar() {
 
     if (salas[posicaoJogador].comInimigo) {
         iniciarCombate();
+    } else if (salas[posicaoJogador].ehLoja) {
+        adicionarLog("⛺ Você encontrou o acampamento de um Mercador Itinerante!");
+        abrirLoja();
     } else {
+        esconderInimigoCorredor();
         adicionarLog("Você entra em uma sala fria e silenciosa... Parece segura.");
     }
 
@@ -209,28 +252,30 @@ function avancar() {
 
 function revelarEscada() {
     adicionarLog("🪜 <b>Você encontrou uma escada de pedra liderando para as profundezas!</b>");
-    document.getElementById('next-floor-box').classList.remove('hidden');
+    const nextFloorBox = document.getElementById('next-floor-box');
+    if (nextFloorBox) nextFloorBox.classList.remove('hidden');
 }
 
 function descenderAndar() {
     andarAtual++;
     luz = 100;
-    document.getElementById('floor-num').textContent = andarAtual;
+    const floorNumEl = document.getElementById('floor-num');
+    if (floorNumEl) floorNumEl.textContent = andarAtual;
     adicionarLog(`🏰 <b>Você desceu para o Andar ${andarAtual}! Os monstros aqui são mais perigosos...</b>`);
     gerarMapaAndar();
     atualizarStats();
 }
 
-// --- 3. SISTEMA DE COMBATE ---
+// --- 3. SISTEMA DE COMBATE E CORREDOR VISUAL ---
 function iniciarCombate() {
     emCombate = true;
     
     const multiplicadorStats = 1 + (andarAtual - 1) * 0.3;
 
     const listaInimigos = [
-        { nome: "Cultista Sombrio", hp: Math.round(35 * multiplicadorStats), xp: 25 },
-        { nome: "Aberração Tenebrosa", hp: Math.round(55 * multiplicadorStats), xp: 40 },
-        { nome: "Esqueleto Guardião", hp: Math.round(40 * multiplicadorStats), xp: 30 }
+        { nome: "Cultista Sombrio", hp: Math.round(35 * multiplicadorStats), xp: 25, ouro: 15, sprite: "🧙‍♂️" },
+        { nome: "Aberração Tenebrosa", hp: Math.round(55 * multiplicadorStats), xp: 40, ouro: 25, sprite: "👾" },
+        { nome: "Esqueleto Guardião", hp: Math.round(40 * multiplicadorStats), xp: 30, ouro: 20, sprite: "💀" }
     ];
 
     const escolhido = listaInimigos[Math.floor(Math.random() * listaInimigos.length)];
@@ -238,12 +283,32 @@ function iniciarCombate() {
     enemyHp = escolhido.hp;
     enemyMaxHp = escolhido.hp;
     enemyXpRecompensa = escolhido.xp;
+    enemyOuroRecompensa = escolhido.ouro;
+    enemySprite = escolhido.sprite;
 
-    document.getElementById('enemy-name').textContent = enemyName;
-    document.getElementById('enemy-hp').textContent = enemyHp;
-    document.getElementById('enemy-max-hp').textContent = enemyMaxHp;
-
+    exibirInimigoCorredor();
     adicionarLog(`⚔️ Um <b>${enemyName}</b> surge do escuro para atacar!`);
+}
+
+function exibirInimigoCorredor() {
+    const enemySilh = document.getElementById('enemy-silhouette');
+    const enemyTag = document.getElementById('enemy-hud-tag');
+    const enemySpriteEl = document.getElementById('enemy-sprite');
+
+    if (enemySilh) enemySilh.classList.remove('hidden');
+    if (enemyTag) {
+        enemyTag.classList.remove('hidden');
+        enemyTag.textContent = `${enemyName} (${enemyHp}/${enemyMaxHp})`;
+    }
+    if (enemySpriteEl) enemySpriteEl.textContent = enemySprite;
+}
+
+function esconderInimigoCorredor() {
+    const enemySilh = document.getElementById('enemy-silhouette');
+    const enemyTag = document.getElementById('enemy-hud-tag');
+
+    if (enemySilh) enemySilh.classList.add('hidden');
+    if (enemyTag) enemyTag.classList.add('hidden');
 }
 
 function calcularDanoHeroi() {
@@ -281,17 +346,20 @@ function atacar() {
 
     if (enemyHp <= 0) {
         enemyHp = 0;
-        adicionarLog(`🎉 Você derrotou o <b>${enemyName}</b>!`);
+        ouro += enemyOuroRecompensa;
+        adicionarLog(`🎉 Você derrotou o <b>${enemyName}</b> e encontrou 🪙 <b>${enemyOuroRecompensa} de ouro</b>!`);
+        
         emCombate = false;
         salas[posicaoJogador].comInimigo = false;
 
-        document.getElementById('enemy-name').textContent = "Nenhum";
+        esconderInimigoCorredor();
         ganharXP(enemyXpRecompensa);
 
         if (posicaoJogador === salaEscada) {
             revelarEscada();
         }
     } else {
+        exibirInimigoCorredor(); // Atualiza HP na HUD
         turnoInimigo();
     }
 
@@ -318,8 +386,31 @@ function defender() {
 }
 
 function usarTocha() {
+    if (inventario.tocha <= 0) {
+        adicionarLog("Você não possui tochas no seu inventário!");
+        return;
+    }
+    inventario.tocha--;
     luz = Math.min(100, luz + 40);
-    adicionarLog("Você reacendeu a tocha. A escuridão recua (+40% Luz).");
+    adicionarLog("🕯️ Você acendeu uma tocha. A escuridão recua (+40% Luz).");
+    atualizarInventarioUI();
+    atualizarStats();
+}
+
+function usarPocao() {
+    if (inventario.pocaodeCura <= 0) {
+        adicionarLog("Você não tem poções de cura!");
+        return;
+    }
+    if (hp >= maxHp) {
+        adicionarLog("Sua vida já está no máximo!");
+        return;
+    }
+    inventario.pocaodeCura--;
+    const cura = 35;
+    hp = Math.min(maxHp, hp + cura);
+    adicionarLog(`🧪 Você bebeu uma poção de cura e recuperou <b>${cura} HP</b>.`);
+    atualizarInventarioUI();
     atualizarStats();
 }
 
@@ -333,7 +424,7 @@ function turnoInimigo() {
     adicionarLog(`💥 O ${enemyName} atacou! Você sofreu <b>${danoInimigo}</b> de dano e +<b>${estresseInimigo}</b> de estresse!`);
 }
 
-// --- 4. PROGRESSÃO, TRAITS E STATUS ---
+// --- 4. PROGRESSÃO, TRAITS E LOJA ---
 function ganharXP(qtd) {
     xp += qtd;
     adicionarLog(`✨ Você ganhou <b>${qtd} XP</b>.`);
@@ -358,6 +449,8 @@ function ganharXP(qtd) {
 function abrirModalTraits() {
     const modal = document.getElementById('trait-modal');
     const container = document.getElementById('trait-options');
+    if (!modal || !container) return;
+    
     container.innerHTML = '';
 
     // Filtra traços que o herói ainda não possui
@@ -391,14 +484,56 @@ function escolherTrait(trait) {
     }
 
     adicionarLog(`🧬 Você adquiriu o traço: <b>${trait.nome}</b>!`);
-    document.getElementById('trait-modal').classList.add('hidden');
+    const traitModal = document.getElementById('trait-modal');
+    if (traitModal) traitModal.classList.add('hidden');
     
     atualizarPainelTraits();
     atualizarStats();
 }
 
+function abrirLoja() {
+    const modal = document.getElementById('shop-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function fecharLoja() {
+    const modal = document.getElementById('shop-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function comprarItem(tipo) {
+    if (tipo === 'pocao' && ouro >= 25) {
+        ouro -= 25;
+        inventario.pocaodeCura++;
+        adicionarLog("🛒 Você comprou uma Poção de Cura.");
+    } else if (tipo === 'tocha' && ouro >= 15) {
+        ouro -= 15;
+        inventario.tocha++;
+        adicionarLog("🛒 Você comprou uma Tocha.");
+    } else {
+        adicionarLog("Ouro insuficiente!");
+    }
+    atualizarStats();
+    atualizarInventarioUI();
+}
+
+function descansarTaverna() {
+    if (ouro >= 40) {
+        ouro -= 40;
+        estresse = Math.max(0, estresse - 40);
+        hp = Math.min(maxHp, hp + 30);
+        adicionarLog("⛺ Você descansou junto ao fogo do acampamento (-40 Estresse, +30 HP).");
+        fecharLoja();
+    } else {
+        adicionarLog("Ouro insuficiente para descansar!");
+    }
+    atualizarStats();
+}
+
+// --- 5. INTERFACE E ATUALIZAÇÕES DE STATUS ---
 function atualizarPainelTraits() {
     const container = document.getElementById('traits-list');
+    if (!container) return;
     container.innerHTML = '';
 
     if (traitsAdquiridos.length === 0) {
@@ -415,17 +550,34 @@ function atualizarPainelTraits() {
     });
 }
 
-function atualizarStats() {
-    document.getElementById('hp').textContent = hp;
-    document.getElementById('max-hp').textContent = maxHp;
-    document.getElementById('estresse').textContent = estresse;
-    document.getElementById('luz').textContent = luz;
-    document.getElementById('hero-level').textContent = nivel;
-    document.getElementById('hero-xp').textContent = xp;
-    document.getElementById('xp-next').textContent = xpNecessario;
+function atualizarInventarioUI() {
+    const container = document.getElementById('inventory-list');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="item-slot" onclick="usarPocao()">🧪 Poção (${inventario.pocaodeCura})</div>
+        <div class="item-slot" onclick="usarTocha()">🕯️ Tocha (${inventario.tocha})</div>
+    `;
+}
 
-    if (enemyMaxHp > 0) {
-        document.getElementById('enemy-hp').textContent = enemyHp;
+function atualizarStats() {
+    const setElem = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    setElem('hp', hp);
+    setElem('max-hp', maxHp);
+    setElem('estresse', estresse);
+    setElem('luz', luz);
+    setElem('gold', ouro);
+    setElem('hero-level', nivel);
+    setElem('hero-xp', xp);
+    setElem('xp-next', xpNecessario);
+
+    const heroTag = document.getElementById('hero-hud-tag');
+    if (heroTag && heroiAtual) {
+        heroTag.textContent = `${heroiAtual.nome} (${hp}/${maxHp} HP)`;
     }
 
     if (estresse >= 100) {
@@ -439,13 +591,18 @@ function atualizarStats() {
 }
 
 function adicionarLog(texto) {
+    if (!logEl) return;
     logEl.innerHTML += `<p>${texto}</p>`;
     logEl.scrollTop = logEl.scrollHeight;
 }
 
 function encerrarJogo() {
-    document.getElementById('actions').innerHTML = `
-        <button class="btn btn-avancar" onclick="location.reload()">🔄 Tentar Novamente</button>
-    `;
-    document.getElementById('next-floor-box').classList.add('hidden');
+    const actionsPanel = document.getElementById('actions');
+    if (actionsPanel) {
+        actionsPanel.innerHTML = `
+            <button class="btn btn-avancar" onclick="location.reload()">🔄 Tentar Novamente</button>
+        `;
+    }
+    const nextFloorBox = document.getElementById('next-floor-box');
+    if (nextFloorBox) nextFloorBox.classList.add('hidden');
 }
