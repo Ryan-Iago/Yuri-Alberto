@@ -67,9 +67,29 @@ h2 {
     min-height: 50px;
 }
 
-/* --- UTILITÁRIOS --- */
+/* --- UTILITÁRIOS & ABAS PRINCIPAIS --- */
 .hidden {
     display: none !important;
+}
+
+.main-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: #18181c;
+    border: 1px solid #3d3121;
+    color: #888;
+}
+
+.tab-btn.active {
+    background: #2a2218;
+    border-color: #c5a059;
+    color: #c5a059;
+    font-weight: bold;
 }
 
 /* --- BARRA SUPERIOR --- */
@@ -183,6 +203,7 @@ h2 {
 .map-cell.visited { background: #2a2a30; }
 .map-cell.stairs { border-color: #f59e0b; background: #78350f; }
 .map-cell.shop { border-color: #a855f7; background: #581c87; }
+.map-cell.curio { border-color: #10b981; background: #064e3b; }
 
 /* CENÁRIO VISUAL DO CORREDOR */
 .corridor-view {
@@ -197,7 +218,6 @@ h2 {
     justify-content: center;
 }
 
-/* Efeito de perspectiva do corredor */
 .dungeon-wall {
     position: absolute;
     top: 0;
@@ -232,20 +252,15 @@ h2 {
     transition: all 0.3s ease;
 }
 
-.hero-silhouette {
-    left: 20%;
-}
-
-.enemy-silhouette {
-    right: 20%;
-}
+.hero-silhouette { left: 20%; }
+.enemy-silhouette { right: 20%; }
 
 .silhouette-sprite {
     font-size: 3.5rem;
     filter: drop-shadow(0 0 8px rgba(0,0,0,0.9));
 }
 
-/* HUD Overlay no Corredor */
+/* HUD Overlay */
 .corridor-hud {
     position: absolute;
     top: 8px;
@@ -268,6 +283,91 @@ h2 {
 .enemy-tag {
     border-color: #8a1212;
     color: #fca5a5;
+}
+
+/* --- ABA DO HERÓI E EQUIPAMENTOS --- */
+.hero-profile-container {
+    background: #0d0d0f;
+    border: 1px solid #3d3121;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.hero-profile-container h3 {
+    margin-top: 0;
+    color: #c5a059;
+    font-size: 1rem;
+    border-bottom: 1px solid #3d3121;
+    padding-bottom: 5px;
+}
+
+.equipment-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.equip-slot {
+    background: #18181c;
+    border: 1px solid #3d3121;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 4px;
+}
+
+.equip-icon {
+    font-size: 1.8rem;
+    width: 40px;
+    text-align: center;
+}
+
+.equip-info h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #fef08a;
+}
+
+.equip-info p {
+    margin: 2px 0;
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.equip-info small {
+    color: #38bdf8;
+    font-size: 0.75rem;
+}
+
+/* SLOTS DE TRINKETS */
+.trinket-slots-container {
+    display: flex;
+    gap: 10px;
+}
+
+.trinket-slot {
+    flex: 1;
+    background: #18181c;
+    border: 1px dashed #5c4728;
+    padding: 12px;
+    text-align: center;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #888;
+    transition: border-color 0.2s;
+}
+
+.trinket-slot:hover {
+    border-color: #f59e0b;
+}
+
+.trinket-slot.equipped {
+    border: 1px solid #f59e0b;
+    background: #26221c;
+    color: #fef08a;
 }
 
 /* --- PAINEL DE INVENTÁRIO --- */
@@ -359,7 +459,7 @@ h2 {
     background: #b45309;
 }
 
-/* --- MODAIS (TRAITS E TAVERNA) --- */
+/* --- MODAIS & LOJA --- */
 .modal-overlay {
     position: absolute;
     top: 0;
@@ -403,7 +503,6 @@ h2 {
     margin-bottom: 15px;
 }
 
-/* TAVERNA & MERCADO DE ITENS */
 .shop-tabs {
     display: flex;
     gap: 10px;
@@ -422,7 +521,7 @@ h2 {
     color: #f3e8ff;
 }
 
-.shop-items-grid, .rest-options {
+.shop-items-grid, .rest-options, .forge-grid, .curio-actions-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -430,7 +529,7 @@ h2 {
     overflow-y: auto;
 }
 
-.shop-item-card, .rest-card {
+.shop-item-card, .rest-card, .forge-card {
     background: #18181c;
     border: 1px solid #3d3121;
     padding: 10px;
@@ -440,17 +539,17 @@ h2 {
     border-radius: 4px;
 }
 
-.shop-item-info {
+.shop-item-info, .forge-info {
     text-align: left;
 }
 
-.shop-item-info h4, .rest-card h4 {
+.shop-item-info h4, .rest-card h4, .forge-info h4 {
     margin: 0;
     color: #fef08a;
     font-size: 0.9rem;
 }
 
-.shop-item-info p, .rest-card p {
+.shop-item-info p, .rest-card p, .forge-info p {
     margin: 3px 0 0 0;
     font-size: 0.8rem;
     color: #aaa;
