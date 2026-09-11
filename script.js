@@ -4,7 +4,7 @@ const classesHerois = {
         nome: "Guerreiro",
         hpMax: 120,
         danoBase: 12,
-        resistEstresse: 0.8, // Toma 20% a menos de estresse
+        resistEstresse: 0.8,
         consumoLuz: 15,
         habilidadeEspecial: "Soco de Escudo",
         sprite: "⚔️"
@@ -14,7 +14,7 @@ const classesHerois = {
         hpMax: 85,
         danoBase: 16,
         resistEstresse: 1.0,
-        consumoLuz: 10, // Consome menos luz
+        consumoLuz: 10,
         habilidadeEspecial: "Golpe Baixo",
         sprite: "🗡️"
     },
@@ -22,12 +22,18 @@ const classesHerois = {
         nome: "Ocultista",
         hpMax: 90,
         danoBase: 14,
-        resistEstresse: 1.2, // Toma 20% a mais de estresse
+        resistEstresse: 1.2,
         consumoLuz: 15,
         habilidadeEspecial: "Drenar Alma",
         sprite: "🔮"
     }
 };
+
+// --- ITENS DA LOJA (MERCADO) ---
+const itensLoja = [
+    { id: "pocao", nome: "🧪 Poção de Cura", preco: 25, desc: "Recupera 35 HP" },
+    { id: "tocha", nome: "🕯️ Tocha", preco: 15, desc: "Aumenta 40% de Luz" }
+];
 
 // --- BANCO DE DADOS DE TRAITS (TRAÇOS) ---
 const listaTraits = [
@@ -99,9 +105,9 @@ let traitsAdquiridos = [];
 
 // --- ESTADO DO MINIMAPA (GRADE 3x3 = 9 SALAS) ---
 let salas = [];
-let posicaoJogador = 0; // Começa na sala 0
-let salaEscada = 8;     // Escada na última sala
-let salaLoja = -1;      // Sala da taverna/mercado
+let posicaoJogador = 0;
+let salaEscada = 8;
+let salaLoja = -1;
 
 // --- ESTADO DO COMBATE ---
 let emCombate = false;
@@ -126,15 +132,11 @@ function selecionarHeroi(tipoClasse) {
     inventario = { pocaodeCura: 2, tocha: 3 };
     
     // Atualiza a interface
-    const heroTitleEl = document.getElementById('hero-title');
+    const heroTitleEl = document.getElementById('hud-hero-name');
     if (heroTitleEl) heroTitleEl.textContent = dados.nome;
     
     document.getElementById('selection-screen').classList.add('hidden');
     document.getElementById('game-screen').classList.remove('hidden');
-
-    // Configura o Sprite da Silhueta do Herói
-    const heroSpriteEl = document.getElementById('hero-sprite');
-    if (heroSpriteEl) heroSpriteEl.textContent = dados.sprite;
 
     gerarMapaAndar();
     atualizarStats();
@@ -151,7 +153,6 @@ function gerarMapaAndar() {
         ehLoja: false
     }));
     
-    // Sala Inicial
     salas[0].comInimigo = false;
     salas[0].visitada = true;
     
@@ -159,7 +160,6 @@ function gerarMapaAndar() {
     salaEscada = 8;
     salas[salaEscada].comInimigo = true;
 
-    // Adiciona uma Taverna/Mercado aleatória entre as salas 2 e 6
     salaLoja = Math.floor(Math.random() * 5) + 2;
     salas[salaLoja].comInimigo = false;
     salas[salaLoja].ehLoja = true;
@@ -188,7 +188,7 @@ function renderizarMinimapa() {
             celula.textContent = '🪜';
         } else if (salas[i].ehLoja && salas[i].visitada) {
             celula.classList.add('shop');
-            celula.textContent = '⛺';
+            celula.textContent = '🍺';
         } else if (salas[i].visitada) {
             celula.classList.add('visited');
             celula.textContent = '•';
@@ -222,10 +222,8 @@ function avancar() {
     posicaoJogador++;
     salas[posicaoJogador].visitada = true;
 
-    // Reduz luz considerando traços
     luz = Math.max(0, luz - calcularConsumoLuz());
 
-    // Luz baixa aumenta estresse
     if (luz < 30) {
         const estresseGanho = Math.round(15 * calcularMultiplicadorEstresse());
         estresse += estresseGanho;
@@ -235,7 +233,7 @@ function avancar() {
     if (salas[posicaoJogador].comInimigo) {
         iniciarCombate();
     } else if (salas[posicaoJogador].ehLoja) {
-        adicionarLog("⛺ Você encontrou o acampamento de um Mercador Itinerante!");
+        adicionarLog("🍺 Você encontrou a Taverna & Mercado das Sombras!");
         abrirLoja();
     } else {
         esconderInimigoCorredor();
@@ -292,23 +290,28 @@ function iniciarCombate() {
 
 function exibirInimigoCorredor() {
     const enemySilh = document.getElementById('enemy-silhouette');
-    const enemyTag = document.getElementById('enemy-hud-tag');
+    const enemyInfo = document.getElementById('hud-enemy-info');
     const enemySpriteEl = document.getElementById('enemy-sprite');
 
     if (enemySilh) enemySilh.classList.remove('hidden');
-    if (enemyTag) {
-        enemyTag.classList.remove('hidden');
-        enemyTag.textContent = `${enemyName} (${enemyHp}/${enemyMaxHp})`;
-    }
+    if (enemyInfo) enemyInfo.classList.remove('hidden');
     if (enemySpriteEl) enemySpriteEl.textContent = enemySprite;
+
+    const nameEl = document.getElementById('enemy-name');
+    const hpEl = document.getElementById('enemy-hp');
+    const maxHpEl = document.getElementById('enemy-max-hp');
+
+    if (nameEl) nameEl.textContent = enemyName;
+    if (hpEl) hpEl.textContent = enemyHp;
+    if (maxHpEl) maxHpEl.textContent = enemyMaxHp;
 }
 
 function esconderInimigoCorredor() {
     const enemySilh = document.getElementById('enemy-silhouette');
-    const enemyTag = document.getElementById('enemy-hud-tag');
+    const enemyInfo = document.getElementById('hud-enemy-info');
 
     if (enemySilh) enemySilh.classList.add('hidden');
-    if (enemyTag) enemyTag.classList.add('hidden');
+    if (enemyInfo) enemyInfo.classList.add('hidden');
 }
 
 function calcularDanoHeroi() {
@@ -359,7 +362,7 @@ function atacar() {
             revelarEscada();
         }
     } else {
-        exibirInimigoCorredor(); // Atualiza HP na HUD
+        exibirInimigoCorredor();
         turnoInimigo();
     }
 
@@ -424,7 +427,101 @@ function turnoInimigo() {
     adicionarLog(`💥 O ${enemyName} atacou! Você sofreu <b>${danoInimigo}</b> de dano e +<b>${estresseInimigo}</b> de estresse!`);
 }
 
-// --- 4. PROGRESSÃO, TRAITS E LOJA ---
+// --- 4. TAVERNA / MERCADO DAS SOMBRAS ---
+function abrirLoja() {
+    const modal = document.getElementById('shop-modal');
+    if (modal) {
+        renderizarItensLoja();
+        alternarAbaLoja('comprar');
+        modal.classList.remove('hidden');
+    }
+}
+
+function fecharLoja() {
+    const modal = document.getElementById('shop-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function alternarAbaLoja(aba) {
+    const buySection = document.getElementById('shop-buy-section');
+    const restSection = document.getElementById('shop-rest-section');
+    const tabs = document.querySelectorAll('.shop-tab');
+
+    tabs.forEach(tab => tab.classList.remove('active'));
+
+    if (aba === 'comprar') {
+        if (buySection) buySection.classList.remove('hidden');
+        if (restSection) restSection.classList.add('hidden');
+        if (tabs[0]) tabs[0].classList.add('active');
+    } else {
+        if (buySection) buySection.classList.add('hidden');
+        if (restSection) restSection.classList.remove('hidden');
+        if (tabs[1]) tabs[1].classList.add('active');
+    }
+}
+
+function renderizarItensLoja() {
+    const container = document.getElementById('shop-items-list');
+    if (!container) return;
+
+    container.innerHTML = '';
+    itensLoja.forEach(item => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'shop-item-card';
+        itemCard.innerHTML = `
+            <h4>${item.nome} (${item.preco} Ouro)</h4>
+            <p>${item.desc}</p>
+            <button class="btn" onclick="comprarItem('${item.id}')">Comprar</button>
+        `;
+        container.appendChild(itemCard);
+    });
+}
+
+function comprarItem(tipo) {
+    if (tipo === 'pocao') {
+        if (ouro >= 25) {
+            ouro -= 25;
+            inventario.pocaodeCura++;
+            adicionarLog("🛒 Você comprou uma Poção de Cura.");
+        } else {
+            adicionarLog("Ouro insuficiente para comprar a Poção!");
+        }
+    } else if (tipo === 'tocha') {
+        if (ouro >= 15) {
+            ouro -= 15;
+            inventario.tocha++;
+            adicionarLog("🛒 Você comprou uma Tocha.");
+        } else {
+            adicionarLog("Ouro insuficiente para comprar a Tocha!");
+        }
+    }
+    atualizarStats();
+    atualizarInventarioUI();
+}
+
+function comprarDescanso(tipo) {
+    if (tipo === 'bebida') {
+        if (ouro >= 30) {
+            ouro -= 30;
+            estresse = Math.max(0, estresse - 30);
+            adicionarLog("🍺 Você bebeu uma bebida quente. Sente-se renovado (-30 Estresse).");
+        } else {
+            adicionarLog("Ouro insuficiente para comprar uma bebida!");
+        }
+    } else if (tipo === 'pernoite') {
+        if (ouro >= 50) {
+            ouro -= 50;
+            hp = maxHp;
+            estresse = Math.max(0, estresse - 50);
+            adicionarLog("🛏️ Você descansou por uma noite inteira (HP Restaurado, -50 Estresse).");
+        } else {
+            adicionarLog("Ouro insuficiente para o pernoite!");
+        }
+    }
+    atualizarStats();
+}
+
+// --- 5. PROGRESSÃO E TRAITS ---
 function ganharXP(qtd) {
     xp += qtd;
     adicionarLog(`✨ Você ganhou <b>${qtd} XP</b>.`);
@@ -439,7 +536,6 @@ function ganharXP(qtd) {
 
         adicionarLog(`🌟 <b>LEVEL UP! Você alcançou o Nível ${nivel}!</b> Sua vida foi restaurada e seus atributos aumentaram!`);
 
-        // Checa se é um nível par para liberar Traço
         if (nivel % 2 === 0) {
             abrirModalTraits();
         }
@@ -453,12 +549,10 @@ function abrirModalTraits() {
     
     container.innerHTML = '';
 
-    // Filtra traços que o herói ainda não possui
     const disponiveis = listaTraits.filter(t => !traitsAdquiridos.some(adq => adq.id === t.id));
 
     if (disponiveis.length === 0) return;
 
-    // Sorteia até 3 opções aleatórias
     const embaralhados = [...disponiveis].sort(() => 0.5 - Math.random());
     const opcoes = embaralhados.slice(0, 3);
 
@@ -491,46 +585,7 @@ function escolherTrait(trait) {
     atualizarStats();
 }
 
-function abrirLoja() {
-    const modal = document.getElementById('shop-modal');
-    if (modal) modal.classList.remove('hidden');
-}
-
-function fecharLoja() {
-    const modal = document.getElementById('shop-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
-function comprarItem(tipo) {
-    if (tipo === 'pocao' && ouro >= 25) {
-        ouro -= 25;
-        inventario.pocaodeCura++;
-        adicionarLog("🛒 Você comprou uma Poção de Cura.");
-    } else if (tipo === 'tocha' && ouro >= 15) {
-        ouro -= 15;
-        inventario.tocha++;
-        adicionarLog("🛒 Você comprou uma Tocha.");
-    } else {
-        adicionarLog("Ouro insuficiente!");
-    }
-    atualizarStats();
-    atualizarInventarioUI();
-}
-
-function descansarTaverna() {
-    if (ouro >= 40) {
-        ouro -= 40;
-        estresse = Math.max(0, estresse - 40);
-        hp = Math.min(maxHp, hp + 30);
-        adicionarLog("⛺ Você descansou junto ao fogo do acampamento (-40 Estresse, +30 HP).");
-        fecharLoja();
-    } else {
-        adicionarLog("Ouro insuficiente para descansar!");
-    }
-    atualizarStats();
-}
-
-// --- 5. INTERFACE E ATUALIZAÇÕES DE STATUS ---
+// --- 6. INTERFACE E ATUALIZADORES ---
 function atualizarPainelTraits() {
     const container = document.getElementById('traits-list');
     if (!container) return;
@@ -575,11 +630,6 @@ function atualizarStats() {
     setElem('hero-xp', xp);
     setElem('xp-next', xpNecessario);
 
-    const heroTag = document.getElementById('hero-hud-tag');
-    if (heroTag && heroiAtual) {
-        heroTag.textContent = `${heroiAtual.nome} (${hp}/${maxHp} HP)`;
-    }
-
     if (estresse >= 100) {
         adicionarLog("⚠️ <b>Seu herói enlouqueceu completamente pelo estresse da escuridão! Fim de jogo.</b>");
         encerrarJogo();
@@ -606,3 +656,16 @@ function encerrarJogo() {
     const nextFloorBox = document.getElementById('next-floor-box');
     if (nextFloorBox) nextFloorBox.classList.add('hidden');
 }
+
+// --- EXPOSIÇÃO GLOBAL DAS FUNÇÕES ---
+window.selecionarHeroi = selecionarHeroi;
+window.atacar = atacar;
+window.defender = defender;
+window.usarTocha = usarTocha;
+window.usarPocao = usarPocao;
+window.avancar = avancar;
+window.descenderAndar = descenderAndar;
+window.fecharLoja = fecharLoja;
+window.alternarAbaLoja = alternarAbaLoja;
+window.comprarItem = comprarItem;
+window.comprarDescanso = comprarDescanso;
