@@ -35,121 +35,187 @@
         <!-- 2. TELA PRINCIPAL DO JOGO -->
         <div id="game-screen" class="screen hidden">
             
-            <!-- Painel Superior: Andar, Nível, XP e Ouro -->
+            <!-- Painel Superior: Navigation Tabs & Global Status -->
             <div class="top-bar">
                 <div class="floor-info">🏰 Andar: <span id="floor-num">1</span></div>
                 <div class="gold-info">💰 Ouro: <span id="gold">50</span></div>
                 <div class="level-info">Nível: <span id="hero-level">1</span> (XP: <span id="hero-xp">0</span>/<span id="xp-next">50</span>)</div>
             </div>
 
-            <!-- Status do Herói -->
+            <!-- Botões de Troca de Vista Principal -->
+            <div class="main-tabs">
+                <button class="btn tab-btn active" onclick="alternarTelaPrincipal('masmorra')">🏰 Masmorra</button>
+                <button class="btn tab-btn" onclick="alternarTelaPrincipal('heroi')">👤 Herói & Equipamentos</button>
+            </div>
+
+            <!-- STATUS RÁPIDO DO HERÓI -->
             <div class="stats-panel">
                 <div class="stat"><span class="label">Vida:</span> <span id="hp">100</span>/<span id="max-hp">100</span></div>
                 <div class="stat"><span class="label">Estresse:</span> <span id="estresse">0</span>/100</div>
                 <div class="stat"><span class="label">Luz:</span> <span id="luz">100</span>%</div>
             </div>
 
-            <!-- Painel de Traços (Traits) Adquiridos -->
-            <div class="traits-panel">
-                <span class="label">Traços:</span>
-                <div id="traits-list" class="traits-container">
-                    <span class="no-traits">Nenhum traço ativo</span>
+            <!-- VISTA 1: EXPLORAÇÃO DA MASMORRA -->
+            <div id="view-dungeon" class="view-section">
+                <!-- Painel de Traços -->
+                <div class="traits-panel">
+                    <span class="label">Traços:</span>
+                    <div id="traits-list" class="traits-container">
+                        <span class="no-traits">Nenhum traço ativo</span>
+                    </div>
+                </div>
+
+                <!-- Área do Minimapa + Cenário Visual -->
+                <div class="main-display">
+                    <div class="minimap-container">
+                        <h4>Minimapa</h4>
+                        <div id="minimap" class="minimap-grid"></div>
+                    </div>
+
+                    <div class="corridor-view">
+                        <div class="dungeon-wall left-wall"></div>
+                        <div class="dungeon-wall right-wall"></div>
+                        <div class="corridor-depth"></div>
+                        
+                        <div id="hero-silhouette" class="silhouette hero-silhouette">
+                            <div class="silhouette-sprite hero-sprite-guerreiro"></div>
+                        </div>
+
+                        <div id="enemy-silhouette" class="silhouette enemy-silhouette hidden">
+                            <div id="enemy-sprite" class="silhouette-sprite"></div>
+                        </div>
+
+                        <div class="corridor-hud">
+                            <div id="hud-hero-name" class="hud-tag">Guerreiro</div>
+                            <div id="hud-enemy-info" class="hud-tag enemy-tag hidden">
+                                <span id="enemy-name">Inimigo</span> (<span id="enemy-hp">0</span>/<span id="enemy-max-hp">0</span> HP)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log de Eventos -->
+                <div id="log" class="log-box">
+                    <p>Você adentra os corredores frios da masmorra...</p>
+                </div>
+
+                <!-- Painel de Ações de Combate / Exploração -->
+                <div id="actions" class="actions-panel">
+                    <button class="btn" onclick="atacar()">Atacar</button>
+                    <button class="btn" onclick="defender()">Acalmar a Mente</button>
+                    <button class="btn" onclick="usarTocha()">Usar Tocha</button>
+                    <button class="btn btn-avancar" onclick="avancar()">Explorar Próxima Sala</button>
+                </div>
+
+                <div id="next-floor-box" class="hidden">
+                    <button class="btn btn-stair" onclick="descenderAndar()">🪜 Descer para o Próximo Andar</button>
                 </div>
             </div>
 
-            <!-- Área do Minimapa + Cenário Visual do Corredor -->
-            <div class="main-display">
-                <!-- Minimapa (3x3 Salas) -->
-                <div class="minimap-container">
-                    <h4>Minimapa</h4>
-                    <div id="minimap" class="minimap-grid">
-                        <!-- Injetado via JS -->
-                    </div>
-                </div>
-
-                <!-- Cenário do Corredor & Silhuetas -->
-                <div class="corridor-view">
-                    <div class="dungeon-wall left-wall"></div>
-                    <div class="dungeon-wall right-wall"></div>
-                    <div class="corridor-depth"></div>
+            <!-- VISTA 2: PAINEL DO HERÓI E EQUIPAMENTOS (NOVA ABA) -->
+            <div id="view-hero" class="view-section hidden">
+                <div class="hero-profile-container">
+                    <h3>Anatomia do Combatente</h3>
                     
-                    <!-- Silhueta do Herói -->
-                    <div id="hero-silhouette" class="silhouette hero-silhouette">
-                        <div class="silhouette-sprite hero-sprite-guerreiro"></div>
+                    <div class="equipment-grid">
+                        <!-- Peitoral / Armadura -->
+                        <div class="equip-slot">
+                            <div class="equip-icon">🛡️</div>
+                            <div class="equip-info">
+                                <h4>Peitoral (Armadura)</h4>
+                                <p>Nível: <span id="armor-level">1</span></p>
+                                <small>+<span id="armor-hp-bonus">0</span> HP Max | +<span id="armor-def-bonus">0</span> Defesa</small>
+                            </div>
+                        </div>
+
+                        <!-- Arma Principal -->
+                        <div class="equip-slot">
+                            <div class="equip-icon">⚔️</div>
+                            <div class="equip-info">
+                                <h4>Arma Principal</h4>
+                                <p>Nível: <span id="weapon-level">1</span></p>
+                                <small>+<span id="weapon-dmg-bonus">0</span> Dano Base</small>
+                            </div>
+                        </div>
+
+                        <!-- Luvas & Botas -->
+                        <div class="equip-slot">
+                            <div class="equip-icon">🥾</div>
+                            <div class="equip-info">
+                                <h4>Luvas & Botas</h4>
+                                <p>Nível: <span id="boots-level">1</span></p>
+                                <small>+<span id="boots-trap-bonus">0</span>% Desarmar Armadilhas</small>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Silhueta do Inimigo / NPC -->
-                    <div id="enemy-silhouette" class="silhouette enemy-silhouette hidden">
-                        <div id="enemy-sprite" class="silhouette-sprite"></div>
-                    </div>
-
-                    <!-- HUD Overlay dentro do Cenário -->
-                    <div class="corridor-hud">
-                        <div id="hud-hero-name" class="hud-tag">Guerreiro</div>
-                        <div id="hud-enemy-info" class="hud-tag enemy-tag hidden">
-                            <span id="enemy-name">Inimigo</span> (<span id="enemy-hp">0</span>/<span id="enemy-max-hp">0</span> HP)
+                    <!-- SLOTS DE TRINKETS (2 MAX) -->
+                    <h3>Relíquias & Trinkets Equipados</h3>
+                    <div class="trinket-slots-container">
+                        <div class="trinket-slot" id="trinket-slot-1" onclick="desequiparTrinket(0)">
+                            <span>Vazio</span>
+                        </div>
+                        <div class="trinket-slot" id="trinket-slot-2" onclick="desequiparTrinket(1)">
+                            <span>Vazio</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Painel de Inventário Rápido -->
+            <!-- Painel de Inventário Rápido (Sempre Visível) -->
             <div class="inventory-panel">
-                <span class="label">Inventário:</span>
-                <div id="inventory-list" class="inventory-container">
-                    <!-- Itens injetados via JS -->
+                <span class="label">Inventário de Mochila:</span>
+                <div id="inventory-list" class="inventory-container"></div>
+            </div>
+
+        </div>
+
+        <!-- MODAL: INTERATIVOS / CURIOS DO MAPA -->
+        <div id="curio-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2 id="curio-title">🔮 Objeto Misterioso</h2>
+                <p id="curio-description">Você encontrou algo no caminho...</p>
+                
+                <div id="curio-actions" class="curio-actions-container">
+                    <!-- Botões de Ação gerados via JS (Ex: Tocar sem nada, Usar Chave, Usar Tocha, Ignorar) -->
                 </div>
-            </div>
-
-            <!-- Log de Eventos -->
-            <div id="log" class="log-box">
-                <p>Você adentra os corredores frios da masmorra...</p>
-            </div>
-
-            <!-- Painel de Ações -->
-            <div id="actions" class="actions-panel">
-                <button class="btn" onclick="atacar()">Atacar</button>
-                <button class="btn" onclick="defender()">Acalmar a Mente</button>
-                <button class="btn" onclick="usarTocha()">Usar Tocha</button>
-                <button class="btn btn-avancar" onclick="avancar()">Explorar Próxima Sala</button>
-            </div>
-
-            <!-- Botão de Descida de Andar -->
-            <div id="next-floor-box" class="hidden">
-                <button class="btn btn-stair" onclick="descenderAndar()">🪜 Descer para o Próximo Andar</button>
             </div>
         </div>
 
-        <!-- Modal de Escolha de Traço -->
+        <!-- MODAL: ESCOLHA DE TRAÇO -->
         <div id="trait-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <h2>🔮 Novo Traço Desbloqueado!</h2>
                 <p>Escolha uma característica para moldar a mente do seu herói:</p>
-                <div id="trait-options" class="trait-options-container">
-                    <!-- Injetado via JS -->
-                </div>
+                <div id="trait-options" class="trait-options-container"></div>
             </div>
         </div>
 
-        <!-- NOVO: Modal de Taverna / Mercado / Mercado da Masmorra -->
+        <!-- MODAL: TAVERNA / MERCADO / FERREIRO -->
         <div id="shop-modal" class="modal-overlay hidden">
             <div class="modal-content shop-content">
-                <h2>🍺 Taverna & Mercado das Sombras</h2>
-                <p>Um porto seguro na escuridão. Escolha seus mantimentos ou descanse.</p>
+                <h2>⚒️ Entreposto da Masmorra</h2>
+                <p>Compre suprimentos, descanse ou aprimore seu equipamento.</p>
                 
                 <div class="shop-tabs">
-                    <button class="btn shop-tab active" onclick="alternarAbaLoja('comprar')">Comprar</button>
+                    <button class="btn shop-tab active" onclick="alternarAbaLoja('comprar')">Suprimentos</button>
+                    <button class="btn shop-tab" onclick="alternarAbaLoja('ferreiro')">Ferreiro</button>
                     <button class="btn shop-tab" onclick="alternarAbaLoja('descansar')">Descansar</button>
                 </div>
 
-                <!-- Aba de Compras -->
+                <!-- Aba Suprimentos -->
                 <div id="shop-buy-section" class="shop-section">
-                    <div id="shop-items-list" class="shop-items-grid">
-                        <!-- Itens do mercado injetados via JS -->
+                    <div id="shop-items-list" class="shop-items-grid"></div>
+                </div>
+
+                <!-- Aba Ferreiro (NOVA) -->
+                <div id="shop-forge-section" class="shop-section hidden">
+                    <div id="forge-items-list" class="forge-grid">
+                        <!-- Opções de Upgrade injetadas via JS -->
                     </div>
                 </div>
 
-                <!-- Aba de Descanso -->
+                <!-- Aba Descanso -->
                 <div id="shop-rest-section" class="shop-section hidden">
                     <div class="rest-options">
                         <div class="rest-card">
@@ -165,7 +231,7 @@
                     </div>
                 </div>
 
-                <button class="btn btn-stair" style="margin-top: 15px;" onclick="fecharLoja()">Sair da Taverna</button>
+                <button class="btn btn-stair" style="margin-top: 15px;" onclick="fecharLoja()">Sair do Entreposto</button>
             </div>
         </div>
 
